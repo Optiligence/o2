@@ -148,7 +148,7 @@ protected Q_SLOTS:
     /// Handle failure of a refresh request.
     virtual void onRefreshError(QNetworkReply::NetworkError error);
 
-protected:
+public:
     /// Build HTTP request body.
     QByteArray buildRequestBody(const QMap<QString, QString> &parameters);
 

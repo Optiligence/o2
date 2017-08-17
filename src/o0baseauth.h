@@ -91,7 +91,7 @@ Q_SIGNALS:
     void tokenSecretChanged();
     void extraTokensChanged();
 
-protected:
+public:
     /// Set authentication token.
     void setToken(const QString &v);
 

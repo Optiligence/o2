@@ -24,7 +24,7 @@ public:
 public Q_SLOTS:
     /// Make a GET request.
     /// @return Request ID or -1 if there are too many requests in the queue.
-    int get(const QNetworkRequest &req);
+    QNetworkReply * get(const QNetworkRequest &req);
 
     /// Make a POST request.
     /// @return Request ID or -1 if there are too many requests in the queue.
@@ -36,7 +36,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     /// Emitted when a request has been completed or failed.
-    void finished(int id, QNetworkReply::NetworkError error, QByteArray data);
+    void finished(int id, QNetworkReply::NetworkError error, QNetworkReply * reply);
 
     /// Emitted when an upload has progressed.
     void uploadProgress(int id, qint64 bytesSent, qint64 bytesTotal);
@@ -61,7 +61,7 @@ protected Q_SLOTS:
     void onUploadProgress(qint64 uploaded, qint64 total);
 
 protected:
-    int setup(const QNetworkRequest &request, QNetworkAccessManager::Operation operation);
+    void setup(const QNetworkRequest &request, QNetworkAccessManager::Operation operation);
 
     enum Status {
         Idle, Requesting, ReRequesting

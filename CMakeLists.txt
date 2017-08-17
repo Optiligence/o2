@@ -36,7 +36,7 @@ option(o2_WITH_FLICKR "Authenticate with Flickr" OFF)
 option(o2_WITH_HUBIC "Authenticate with Hubic" OFF)
 option(o2_WITH_SPOTIFY "Authenticate with Spotify" OFF)
 option(o2_WITH_SURVEYMONKEY "Authenticate with SurveyMonkey" OFF)
-option(o2_WITH_KEYCHAIN "keychain store" ON)
+option(o2_WITH_KEYCHAIN "keychain store" OFF)
 
 option(o2_WITH_OAUTH1 "Include OAuth1 authentication" OFF)
 if(o2_WITH_TWITTER OR o2_WITH_DROPBOX OR o2_WITH_FLICKR)
@@ -46,7 +46,7 @@ endif()
 option(o2_BUILD_EXAMPLES "Build examples" OFF)
 
 if(WIN32)
-  add_definitions(-DO2_DLL_EXPORT)
+  #add_definitions(-DO2_DLL_EXPORT)
 endif()
 
 add_subdirectory(src)

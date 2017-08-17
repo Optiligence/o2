@@ -220,6 +220,7 @@ void O2::link() {
         QNetworkRequest tokenRequest(url);
         tokenRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
         QNetworkReply *tokenReply = manager_->post(tokenRequest, payload);
+        qDebug() << "token requested" << tokenRequest.url();
 
         connect(tokenReply, SIGNAL(finished()), this, SLOT(onTokenReplyFinished()), Qt::QueuedConnection);
         connect(tokenReply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(onTokenReplyError(QNetworkReply::NetworkError)), Qt::QueuedConnection);
@@ -246,16 +247,23 @@ void O2::onVerificationReceived(const QMap<QString, QString> response) {
         Q_EMIT linkingFailed();
         return;
     }
+    if (response.empty()) {
+        qWarning() << "O2::onVerificationReceived: response empty";
+        return;
+    }
 
     if (grantFlow_ == GrantFlowAuthorizationCode) {
         // Save access code
         setCode(response.value(QString(O2_OAUTH2_GRANT_TYPE_CODE)));
-
         // Exchange access code for access/refresh tokens
-        QString query;
-        if(!apiKey_.isEmpty())
-            query = QString("?" + QString(O2_OAUTH2_API_KEY) + "=" + apiKey_);
-        QNetworkRequest tokenRequest(QUrl(tokenUrl_.toString() + query));
+        auto url = tokenUrl_;
+        if (!apiKey_.isEmpty()) {
+            QUrlQuery query{url.query()};
+            query.addQueryItem(QString(O2_OAUTH2_API_KEY), apiKey_);
+            query.addQueryItem(QString(O2_OAUTH2_GRANT_TYPE_CODE), code());
+            url.setQuery(query);
+        }
+        QNetworkRequest tokenRequest(url);
         tokenRequest.setHeader(QNetworkRequest::ContentTypeHeader, O2_MIME_TYPE_XFORM);
         tokenRequest.setRawHeader("Accept", O2_MIME_TYPE_JSON);
         QMap<QString, QString> parameters;
@@ -269,6 +277,7 @@ void O2::onVerificationReceived(const QMap<QString, QString> response) {
         qDebug() << QString("O2::onVerificationReceived: Exchange access code data:\n%1").arg(QString(data));
 
         QNetworkReply *tokenReply = manager_->post(tokenRequest, data);
+        qDebug() << "token request" << tokenReply << tokenRequest.url() << data;
         timedReplies_.add(tokenReply);
         connect(tokenReply, SIGNAL(finished()), this, SLOT(onTokenReplyFinished()), Qt::QueuedConnection);
         connect(tokenReply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(onTokenReplyError(QNetworkReply::NetworkError)), Qt::QueuedConnection);
@@ -292,8 +301,8 @@ void O2::onVerificationReceived(const QMap<QString, QString> response) {
           Q_EMIT linkingFailed();
       }
     } else {
-        setToken(response.value(O2_OAUTH2_ACCESS_TOKEN));
-        setRefreshToken(response.value(O2_OAUTH2_REFRESH_TOKEN));
+        setToken(response.value(QString(O2_OAUTH2_ACCESS_TOKEN)));
+        setRefreshToken(response.value(QString(O2_OAUTH2_REFRESH_TOKEN)));
     }
 }
 
@@ -325,6 +334,7 @@ void O2::onTokenReplyFinished() {
 
         QVariantMap tokens = parseTokenResponse(replyData);
 
+        qDebug() << "O2::onTokenReplyFinished" << tokenReply << replyData;
         // Dump tokens
         qDebug() << "O2::onTokenReplyFinished: Tokens returned:\n";
         foreach (QString key, tokens.keys()) {

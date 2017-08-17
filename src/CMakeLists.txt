@@ -4,6 +4,8 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
+option(o2_WITH_QT5 "" ON)
+
 if(o2_WITH_QT5)
     find_package(Qt5 COMPONENTS Core Network REQUIRED)
 else(o2_WITH_QT5)
@@ -190,12 +192,16 @@ if(BUILD_SHARED_LIBS AND APPLE AND POLICY CMP0042) # in CMake >= 2.8.12
     set(CMAKE_MACOSX_RPATH OFF) # don't embed @rpath in install name
 endif(BUILD_SHARED_LIBS AND APPLE AND POLICY CMP0042)
 
-add_library( o2 ${o2_SRCS} ${o2_HDRS} )
+add_library(o2 STATIC ${o2_SRCS} ${o2_HDRS})
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(o2_WITH_QT5)
     target_link_libraries( o2 Qt5::Core Qt5::Network ${LINK_TARGETS})
+    message(STATUS "O2 Qt5")
 else(o2_WITH_QT5)
     target_link_libraries( o2 ${QT_LIBRARIES} ${LINK_TARGETS})
+    message(SEND_ERROR "O2 Qt4")
 endif(o2_WITH_QT5)
 
 if(BUILD_SHARED_LIBS)
@@ -225,5 +231,5 @@ install(FILES ${o2_HDRS}
 )
 
 message(STATUS "Writing pkg-config file...")
-configure_file(${CMAKE_SOURCE_DIR}/o2.pc.cmake ${CMAKE_BINARY_DIR}/o2.pc @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../o2.pc.cmake ${CMAKE_BINARY_DIR}/o2.pc @ONLY)
 install(FILES ${CMAKE_BINARY_DIR}/o2.pc DESTINATION "${CMAKE_INSTALL_PREFIX}/lib${o2_LIB_SUFFIX}/pkgconfig/")
